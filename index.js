@@ -3,7 +3,7 @@ const path = require("path");
 
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(express.json());
@@ -41,7 +41,6 @@ app.get("/books/", async (request, response) => {
   response.send(booksArray);
 });
 
-
 // User Register API
 app.post("/users/", async (request, response) => {
   const { username, name, password, gender, location } = request.body;
@@ -74,7 +73,6 @@ app.post("/users/", async (request, response) => {
   }
 });
 
-
 // User Login API
 app.post("/login/", async (request, response) => {
   const { username, password } = request.body;
@@ -100,4 +98,3 @@ app.post("/login/", async (request, response) => {
     }
   }
 });
-
