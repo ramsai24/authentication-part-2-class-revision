@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-
+const jwt = require("jsonwebtoken");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 const bcrypt = require("bcrypt");
@@ -30,15 +30,32 @@ initializeDBAndServer();
 
 // Get Books API
 app.get("/books/", async (request, response) => {
-  const getBooksQuery = `
-  SELECT
-    *
-  FROM
-    book
-  ORDER BY
-    book_id;`;
-  const booksArray = await db.all(getBooksQuery);
-  response.send(booksArray);
+  let jwtToken;
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    jwtToken = authHeader.split(" ")[1];
+  }
+  if (jwtToken === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    await jwt.verify(jwtToken, "ramsai", async (error, user) => {
+      if (error) {
+        response.status(400);
+        response.send("Invalid Access Token ");
+      } else {
+        const getBooksQuery = `
+            SELECT
+                *
+            FROM
+                book
+            ORDER BY
+                book_id;`;
+        const booksArray = await db.all(getBooksQuery);
+        response.send(booksArray);
+      }
+    });
+  }
 });
 
 // User Register API
@@ -91,7 +108,12 @@ app.post("/login/", async (request, response) => {
   } else {
     const isPasswordMatched = await bcrypt.compare(password, dbUser.password);
     if (isPasswordMatched === true) {
-      response.send("Login Success!");
+      const payload = { username: username };
+
+      const jwtToken = jwt.sign(payload, "ramsai");
+      //response.send({ jwtToken });
+      response.send(jwtToken);
+      //response.send("Login Success!");
     } else {
       response.status(400);
       response.send("Invalid Password");
